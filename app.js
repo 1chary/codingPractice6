@@ -1,33 +1,32 @@
-
 const express = require("express");
 const app = express();
 
 const { open } = require("sqlite");
 const sqlite3 = require("sqlite3");
+
 const path = require("path");
+const database = path.join(__dirname, "todoApplication.db");
+
+let db = null;
 
 app.use(express.json());
 
-const db = path.join(__dirname, "todoApplication.db");
-
-let database = null;
-
-const initializeTheDataBase = async () => {
+const initializeTheDatabase = async () => {
   try {
-    database = await open({
-      filename: db,
+    db = await open({
+      filename: database,
       driver: sqlite3.Database,
     });
     app.listen(3000, () => {
-      console.log("server started running at http://localhost:3000/");
+      console.log("server running at http://localhost:3000/");
     });
   } catch (e) {
-    console.log(`DB:ERROR ${e.message}`);
+    console.log(`DB:Error ${e.message}`);
     process.exit(1);
   }
 };
 
-initializeTheDataBase();
+initializeTheDatabase();
 
 // API 1 CODE:
 const hasPriorityAndStatusProperties = (requestQuery) => {
@@ -48,7 +47,7 @@ const hasStatusProperty = (requestQuery) => {
 app.get("/todos/", async (request, response) => {
   let data = null;
   let getQuery = "";
-  const { search_q, priority, status } = request.query;
+  const { search_q = "", priority, status } = request.query;
 
   switch (true) {
     case hasPriorityAndStatusProperties(request.query):
@@ -137,8 +136,7 @@ app.put("/todos/:todoId/", async (request, response) => {
   FROM 
     todo
   WHERE 
-    id = ${todoId}
-  `;
+    id = ${todoId}`;
   const getDetails = await db.run(access);
   const {
     todo = getDetails.todo,
@@ -169,4 +167,3 @@ app.delete("/todos/:todoId/", async (request, response) => {
 });
 
 module.exports = app;
-
